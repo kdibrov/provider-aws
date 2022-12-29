@@ -1,0 +1,120 @@
+apiVersion: opsworks.aws.upbound.io/v1beta1
+kind: Stack
+metadata:
+  annotations:
+    meta.upbound.io/example-id: opsworks/v1beta1/stack
+  labels:
+    testing.upbound.io/example-name: main
+  name: main
+spec:
+  forProvider:
+    customJson: |
+      {
+       "opsworkstest": {
+          "version": "1.0.0"
+        }
+      }
+    defaultInstanceProfileArnSelector:
+      matchLabels:
+        testing.upbound.io/example-name: test_profile
+    name: awesome-stack
+    region: us-west-1
+    defaultAvailabilityZone: us-west-1a
+    serviceRoleArnSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-ops-role
+
+---
+
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: Role
+metadata:
+  annotations:
+    meta.upbound.io/example-id: opsworks/v1beta1/domain
+  labels:
+    testing.upbound.io/example-name: example-ops-role
+  name: example-ops-role
+spec:
+  forProvider:
+    assumeRolePolicy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": ["ec2.amazonaws.com", "opsworks.amazonaws.com"]
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+
+    path: /
+
+--- 
+
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: iam/v1beta1/ec2template
+  labels:
+    testing.upbound.io/example-name: ec2_full_access
+  name: ec2-full-access
+spec:
+  forProvider:
+    policyArn: "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+    roleSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-ops-role
+
+---
+
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: iam/v1beta1/opsworkstemplate
+  labels:
+    testing.upbound.io/example-name: opsworks-full-access
+  name: opsworks-full-access
+spec:
+  forProvider:
+    policyArn: "arn:aws:iam::aws:policy/AWSOpsWorks_FullAccess"
+    roleSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-ops-role
+
+---
+
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: RolePolicyAttachment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: iam/v1beta1/opsworkscmstemplate
+  labels:
+    testing.upbound.io/example-name: opsworks-cms-access
+  name: opsworks-cms-access
+spec:
+  forProvider:
+    policyArn: "arn:aws:iam::aws:policy/service-role/AWSOpsWorksCMServiceRole"
+    roleSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-ops-role
+
+---
+
+apiVersion: iam.aws.upbound.io/v1beta1
+kind: InstanceProfile
+metadata:
+  annotations:
+    meta.upbound.io/example-id: iam/v1beta1/instanceprofile
+  labels:
+    testing.upbound.io/example-name: test_profile
+  name: test-profile
+spec:
+  forProvider:
+    roleSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-ops-role
